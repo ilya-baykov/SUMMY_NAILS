@@ -1,0 +1,10 @@
+.DS_Store
+.idea/
+.venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+uploads/
+staticfiles/
+.env
+.env.*

@@ -1,0 +1,173 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nails Pro</title>
+    <link rel="stylesheet" href="{% static 'dashboard/styles.css' %}" />
+  </head>
+  <body>
+    <main class="app-shell" aria-live="polite">
+      <header class="profile-header">
+        <div class="avatar">АК</div>
+        <div>
+          <h1>Анна Ковалёва</h1>
+          <div class="badges">
+            <span>Топ-мастер · 45%</span>
+            <span>★ 4.9</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="shift-card">
+        <div>
+          <div class="status"><span></span> Смена закрыта</div>
+          <strong id="shiftTotal">—</strong>
+          <p>Откройте смену, чтобы принимать и закрывать записи</p>
+        </div>
+        <button class="primary" id="shiftButton" type="button">Открыть смену</button>
+      </section>
+
+      <section class="tab-panel active" data-panel="today">
+        <div class="section-title">
+          <span>Сегодня · <b id="closedCount">0</b> из 4 закрыто · выручка <b id="revenue">0 ₽</b></span>
+        </div>
+        <div class="booking-list" id="bookingList"></div>
+        <p class="hint" id="todayHint">Чтобы закрывать записи, откройте смену</p>
+      </section>
+
+      <section class="tab-panel" data-panel="profile">
+        <div class="section-title action-title">
+          <span>Медицинская книжка</span>
+          <button type="button" id="editMedicalButton">Изменить</button>
+        </div>
+        <article class="info-card" id="medicalCard"></article>
+
+        <form class="data-form hidden" id="medicalForm">
+          {% csrf_token %}
+          <label>
+            <span>Номер справки</span>
+            <input name="number" autocomplete="off" required />
+          </label>
+          <label>
+            <span>Действует до</span>
+            <input name="valid_until" type="date" required />
+          </label>
+          <label>
+            <span>Статус</span>
+            <select name="status" required>
+              <option value="valid">Действительна</option>
+              <option value="review">На проверке</option>
+              <option value="expired">Истек срок</option>
+            </select>
+          </label>
+          <div class="form-actions">
+            <button class="secondary" type="button" id="cancelMedicalButton">Отмена</button>
+            <button class="primary small" type="submit">Сохранить</button>
+          </div>
+        </form>
+
+        <div class="section-title action-title profile-title">
+          <span>Образование и курсы</span>
+          <button type="button" id="showEducationFormButton">+ Добавить</button>
+        </div>
+        <div class="stack" id="educationList"></div>
+
+        <form class="data-form hidden" id="educationForm">
+          {% csrf_token %}
+          <label>
+            <span>Тип записи</span>
+            <select name="record_type" required>
+              <option value="diploma">Диплом</option>
+              <option value="course">Курс</option>
+              <option value="certificate">Сертификат</option>
+            </select>
+          </label>
+          <label>
+            <span>Название</span>
+            <input name="title" autocomplete="off" required />
+          </label>
+          <label>
+            <span>Организация</span>
+            <input name="issuer" autocomplete="off" required />
+          </label>
+          <label>
+            <span>Год</span>
+            <input name="year" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required />
+          </label>
+          <label>
+            <span>Статус</span>
+            <select name="status" required>
+              <option value="confirmed">Подтверждено</option>
+              <option value="review">На проверке</option>
+            </select>
+          </label>
+          <div class="form-actions">
+            <button class="secondary" type="button" id="cancelEducationButton">Отмена</button>
+            <button class="primary small" type="submit">Добавить</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="tab-panel" data-panel="portfolio">
+        <div class="section-title action-title">
+          <span>Портфолио · <b id="portfolioCount">0</b> работ</span>
+          <button type="button" id="addWorkButton">+ Добавить</button>
+        </div>
+        <form class="data-form hidden" id="portfolioForm" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label>
+            <span>Фото работы</span>
+            <input name="image" type="file" accept="image/*" required />
+          </label>
+          <label>
+            <span>Подпись</span>
+            <input name="title" autocomplete="off" placeholder="Например: Нюд + френч" required />
+          </label>
+          <div class="form-actions">
+            <button class="secondary" type="button" id="cancelPortfolioButton">Отмена</button>
+            <button class="primary small" type="submit">Добавить</button>
+          </div>
+        </form>
+        <div class="portfolio-grid" id="portfolioGrid"></div>
+      </section>
+
+      <section class="tab-panel" data-panel="finance">
+        <div class="section-title">Баланс</div>
+        <article class="balance-card">
+          <span>Доступно к выводу</span>
+          <strong id="balance">18 450 ₽</strong>
+          <button type="button">Вывести на карту •••• 4821</button>
+        </article>
+
+        <div class="section-title">Операции</div>
+        <div class="stack">
+          <article class="operation">
+            <div>
+              <strong>Начисление за смену 8 июня</strong>
+              <p>5 записей · ставка по грейду 45%</p>
+            </div>
+            <b class="positive">+7 065 ₽</b>
+          </article>
+          <article class="operation">
+            <div>
+              <strong>Вывод на карту •••• 4821</strong>
+              <p>8 июня, 21:14</p>
+            </div>
+            <b>−10 000 ₽</b>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Основная навигация">
+      <button class="active" type="button" data-tab="today"><span>📋</span>Сегодня</button>
+      <button type="button" data-tab="profile"><span>🪪</span>Профиль</button>
+      <button type="button" data-tab="portfolio"><span>✨</span>Портфолио</button>
+      <button type="button" data-tab="finance"><span>💳</span>Финансы</button>
+    </nav>
+
+    <script src="{% static 'dashboard/app.js' %}"></script>
+  </body>
+</html>
