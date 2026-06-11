@@ -1,0 +1,55 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Онлайн-запись · Nails Pro</title>
+    <link rel="stylesheet" href="{% static 'dashboard/styles.css' %}" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="profile-header">
+        <div class="avatar">АК</div>
+        <div>
+          <h1>Онлайн-запись</h1>
+          <div class="badges">
+            <span>Nails Pro</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="top-actions">
+        <a href="{% url 'dashboard:dashboard' %}">Кабинет</a>
+      </div>
+
+      <form class="data-form" id="bookingForm">
+        {% csrf_token %}
+        <label>
+          <span>Имя</span>
+          <input name="client_name" autocomplete="name" required />
+        </label>
+        <label>
+          <span>Телефон</span>
+          <input name="client_phone" autocomplete="tel" required />
+        </label>
+        <label>
+          <span>Услуга</span>
+          <select name="service_id" id="bookingService" required></select>
+        </label>
+        <label>
+          <span>Дата и время</span>
+          <input name="starts_at" type="datetime-local" required />
+        </label>
+        <label>
+          <span>Комментарий</span>
+          <input name="notes" autocomplete="off" />
+        </label>
+        <button class="primary small" type="submit">Записаться</button>
+        <p class="hint" id="bookingResult"></p>
+      </form>
+    </main>
+
+    <script src="{% static 'dashboard/booking.js' %}"></script>
+  </body>
+</html>

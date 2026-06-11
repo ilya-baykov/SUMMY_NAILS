@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "dev-only-nails-secret-key"
 DEBUG = True
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -65,3 +65,5 @@ MEDIA_URL = "uploads/"
 MEDIA_ROOT = BASE_DIR / "uploads"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"

@@ -1,0 +1,92 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Управление · Nails Pro</title>
+    <link rel="stylesheet" href="{% static 'dashboard/styles.css' %}" />
+  </head>
+  <body>
+    <main class="app-shell staff-shell">
+      <header class="profile-header">
+        <div class="avatar">АК</div>
+        <div>
+          <h1>Управление</h1>
+          <div class="badges">
+            <span>{{ role_label }}</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="top-actions">
+        <a href="{% url 'dashboard:dashboard' %}">Кабинет</a>
+        <a href="{% url 'dashboard:booking' %}">Онлайн-запись</a>
+        <a href="{% url 'dashboard:logout' %}">Выйти</a>
+      </div>
+
+      <section>
+        <div class="section-title">Услуги</div>
+        <form class="data-form compact-form" id="serviceForm">
+          {% csrf_token %}
+          <input name="title" placeholder="Название услуги" required />
+          <input name="duration_minutes" inputmode="numeric" placeholder="Минуты" required />
+          <input name="price" inputmode="numeric" placeholder="Цена" required />
+          <button class="primary small" type="submit">Добавить</button>
+        </form>
+        <div class="stack" id="serviceList"></div>
+      </section>
+
+      <section>
+        <div class="section-title profile-title">Расписание и записи</div>
+        <form class="data-form" id="staffAppointmentForm">
+          {% csrf_token %}
+          <label>
+            <span>Клиент</span>
+            <input name="client_name" required />
+          </label>
+          <label>
+            <span>Телефон</span>
+            <input name="client_phone" required />
+          </label>
+          <label>
+            <span>Услуга</span>
+            <select name="service_id" id="staffService" required></select>
+          </label>
+          <label>
+            <span>Дата и время</span>
+            <input name="starts_at" type="datetime-local" required />
+          </label>
+          <label>
+            <span>Статус</span>
+            <select name="status" required>
+              <option value="new">Новая</option>
+              <option value="confirmed">Подтверждена</option>
+            </select>
+          </label>
+          <label>
+            <span>Комментарий</span>
+            <input name="notes" />
+          </label>
+          <button class="primary small" type="submit">Создать запись</button>
+        </form>
+        <div class="stack" id="staffAppointmentList"></div>
+      </section>
+
+      {% if can_owner %}
+      <section>
+        <div class="section-title profile-title">Выплаты</div>
+        <form class="data-form compact-form" id="payoutForm">
+          {% csrf_token %}
+          <input name="title" placeholder="Основание" required />
+          <input name="amount" inputmode="numeric" placeholder="Сумма" required />
+          <button class="primary small" type="submit">Провести выплату</button>
+        </form>
+        <div class="stack" id="staffFinanceList"></div>
+      </section>
+      {% endif %}
+    </main>
+
+    <script src="{% static 'dashboard/staff.js' %}"></script>
+  </body>
+</html>

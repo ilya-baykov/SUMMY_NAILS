@@ -16,9 +16,18 @@
           <div class="badges">
             <span>Топ-мастер · 45%</span>
             <span>★ 4.9</span>
+            <span>{{ role_label }}</span>
           </div>
         </div>
       </header>
+
+      <div class="top-actions">
+        <a href="{% url 'dashboard:booking' %}">Онлайн-запись</a>
+        {% if can_manage %}
+          <a href="{% url 'dashboard:staff_panel' %}">Управление</a>
+        {% endif %}
+        <a href="{% url 'dashboard:logout' %}">Выйти</a>
+      </div>
 
       <section class="shift-card">
         <div>
@@ -31,7 +40,7 @@
 
       <section class="tab-panel active" data-panel="today">
         <div class="section-title">
-          <span>Сегодня · <b id="closedCount">0</b> из 4 закрыто · выручка <b id="revenue">0 ₽</b></span>
+          <span>Сегодня · <b id="closedCount">0</b> из <b id="appointmentsCount">0</b> закрыто · выручка <b id="revenue">0 ₽</b></span>
         </div>
         <div class="booking-list" id="bookingList"></div>
         <p class="hint" id="todayHint">Чтобы закрывать записи, откройте смену</p>
@@ -137,27 +146,12 @@
         <div class="section-title">Баланс</div>
         <article class="balance-card">
           <span>Доступно к выводу</span>
-          <strong id="balance">18 450 ₽</strong>
+          <strong id="balance">0 ₽</strong>
           <button type="button">Вывести на карту •••• 4821</button>
         </article>
 
         <div class="section-title">Операции</div>
-        <div class="stack">
-          <article class="operation">
-            <div>
-              <strong>Начисление за смену 8 июня</strong>
-              <p>5 записей · ставка по грейду 45%</p>
-            </div>
-            <b class="positive">+7 065 ₽</b>
-          </article>
-          <article class="operation">
-            <div>
-              <strong>Вывод на карту •••• 4821</strong>
-              <p>8 июня, 21:14</p>
-            </div>
-            <b>−10 000 ₽</b>
-          </article>
-        </div>
+        <div class="stack" id="financeList"></div>
       </section>
     </main>
 

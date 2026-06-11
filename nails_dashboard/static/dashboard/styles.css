@@ -47,6 +47,24 @@ button {
   margin-bottom: 18px;
 }
 
+.top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -4px 0 18px;
+}
+
+.top-actions a {
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: var(--card);
+  color: var(--brand-dark);
+  font-size: 14px;
+  font-weight: 850;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+}
+
 .avatar {
   display: grid;
   width: 60px;
@@ -308,6 +326,24 @@ p {
   box-shadow: var(--shadow);
 }
 
+.compact-form {
+  grid-template-columns: 1.4fr 0.7fr 0.7fr auto;
+  align-items: end;
+}
+
+.auth-shell {
+  padding-top: 64px;
+}
+
+.auth-hint {
+  align-items: flex-start;
+}
+
+.danger-text {
+  color: #9b493d;
+  font-weight: 800;
+}
+
 .data-form.hidden {
   display: none;
 }
@@ -558,5 +594,9 @@ p {
   .form-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .compact-form {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,16 +1,13 @@
-const bookings = [
-  { id: 1, time: "10:00", duration: "120 мин", client: "Мария С.", service: "Маникюр + покрытие гель-лак", price: 3200, closed: false },
-  { id: 2, time: "12:30", duration: "150 мин", client: "Ольга Д.", service: "Снятие + укрепление + дизайн", price: 4100, closed: false },
-  { id: 3, time: "15:30", duration: "90 мин", client: "Виктория П.", service: "Маникюр комбинированный", price: 2400, closed: false },
-  { id: 4, time: "17:30", duration: "130 мин", client: "Елена Т.", service: "Френч + ремонт 2 ногтей", price: 3600, closed: false },
-];
-
 const state = {
   shiftOpen: false,
-  profile: {
+  dashboard: {
     medical_book: null,
     education: [],
     portfolio: [],
+    appointments: [],
+    shift: { is_open: false },
+    finance: { balance: 0, operations: [] },
+    services: [],
   },
 };
 
@@ -21,8 +18,11 @@ const shiftCard = document.querySelector(".shift-card");
 const shiftButton = document.querySelector("#shiftButton");
 const shiftTotal = document.querySelector("#shiftTotal");
 const closedCount = document.querySelector("#closedCount");
+const appointmentsCount = document.querySelector("#appointmentsCount");
 const revenue = document.querySelector("#revenue");
 const todayHint = document.querySelector("#todayHint");
+const balance = document.querySelector("#balance");
+const financeList = document.querySelector("#financeList");
 const medicalCard = document.querySelector("#medicalCard");
 const medicalForm = document.querySelector("#medicalForm");
 const editMedicalButton = document.querySelector("#editMedicalButton");
@@ -48,11 +48,11 @@ function getCookie(name) {
 }
 
 function getStatusClass(status) {
-  if (status === "confirmed" || status === "valid") {
+  if (status === "confirmed" || status === "valid" || status === "closed") {
     return "success";
   }
 
-  if (status === "review") {
+  if (status === "review" || status === "new") {
     return "warn";
   }
 
@@ -75,35 +75,46 @@ async function apiFetch(url, options = {}) {
   return response.json();
 }
 
-async function loadProfile() {
-  state.profile = await apiFetch("/api/profile/");
-  renderProfile();
-  renderPortfolio();
+async function loadDashboard() {
+  state.dashboard = await apiFetch("/api/dashboard/");
+  state.shiftOpen = state.dashboard.shift.is_open;
+  renderAll();
 }
 
 function renderBookings() {
   bookingList.innerHTML = "";
 
-  bookings.forEach((booking) => {
+  if (state.dashboard.appointments.length === 0) {
+    bookingList.innerHTML = `<div class="empty-state">На сегодня записей нет</div>`;
+    return;
+  }
+
+  state.dashboard.appointments.forEach((appointment) => {
+    const isClosed = appointment.status === "closed";
     const item = document.createElement("article");
-    item.className = `booking${booking.closed ? " closed" : ""}`;
+    item.className = `booking${isClosed ? " closed" : ""}`;
     item.innerHTML = `
       <div class="booking-main">
         <div class="booking-time">
-          <span>${booking.time}</span>
-          <span class="time-chip">${booking.duration}</span>
+          <span>${appointment.time_display}</span>
+          <span class="time-chip">${appointment.service.duration_minutes} мин</span>
         </div>
-        <h2>${booking.client}</h2>
-        <p>${booking.service} · ${money(booking.price)} ₽</p>
+        <h2>${appointment.client_name}</h2>
+        <p>${appointment.service.title} · ${money(appointment.service.price)} ₽</p>
+        <p>${appointment.client_phone} · ${appointment.status_display}</p>
       </div>
-      <button type="button" ${state.shiftOpen || booking.closed ? "" : "disabled"}>
-        ${booking.closed ? "Запись закрыта" : "Закрыть запись"}
+      <button type="button" ${state.shiftOpen && !isClosed ? "" : "disabled"}>
+        ${isClosed ? "Запись закрыта" : "Закрыть запись"}
       </button>
     `;
 
-    item.querySelector("button").addEventListener("click", () => {
-      booking.closed = true;
+    item.querySelector("button").addEventListener("click", async () => {
+      const data = await apiFetch(`/api/appointments/${appointment.id}/close/`, { method: "POST" });
+      state.dashboard.appointments = state.dashboard.appointments.map((record) => (record.id === data.appointment.id ? data.appointment : record));
+      state.dashboard.shift = data.shift;
+      state.dashboard.finance = data.finance;
       renderToday();
+      renderFinance();
     });
 
     bookingList.append(item);
@@ -111,7 +122,7 @@ function renderBookings() {
 }
 
 function renderMedicalBook() {
-  const medicalBook = state.profile.medical_book;
+  const medicalBook = state.dashboard.medical_book;
 
   if (!medicalBook) {
     return;
@@ -129,7 +140,7 @@ function renderMedicalBook() {
 function renderEducation() {
   educationList.innerHTML = "";
 
-  state.profile.education.forEach((item) => {
+  state.dashboard.education.forEach((item) => {
     const card = document.createElement("article");
     card.className = "info-card";
     card.innerHTML = `
@@ -145,7 +156,7 @@ function renderEducation() {
 
     card.querySelector("button").addEventListener("click", async () => {
       await apiFetch(`/api/education/${item.id}/`, { method: "DELETE" });
-      state.profile.education = state.profile.education.filter((record) => record.id !== item.id);
+      state.dashboard.education = state.dashboard.education.filter((record) => record.id !== item.id);
       renderEducation();
     });
 
@@ -155,14 +166,14 @@ function renderEducation() {
 
 function renderPortfolio() {
   portfolioGrid.innerHTML = "";
-  portfolioCount.textContent = state.profile.portfolio.length;
+  portfolioCount.textContent = state.dashboard.portfolio.length;
 
-  if (state.profile.portfolio.length === 0) {
+  if (state.dashboard.portfolio.length === 0) {
     portfolioGrid.innerHTML = `<div class="empty-state">Добавьте первую работу с фото и подписью</div>`;
     return;
   }
 
-  state.profile.portfolio.forEach((work) => {
+  state.dashboard.portfolio.forEach((work) => {
     const item = document.createElement("article");
     item.className = "work-card";
     item.innerHTML = `
@@ -173,7 +184,7 @@ function renderPortfolio() {
 
     item.querySelector("button").addEventListener("click", async () => {
       await apiFetch(`/api/portfolio/${work.id}/`, { method: "DELETE" });
-      state.profile.portfolio = state.profile.portfolio.filter((record) => record.id !== work.id);
+      state.dashboard.portfolio = state.dashboard.portfolio.filter((record) => record.id !== work.id);
       renderPortfolio();
     });
 
@@ -182,16 +193,41 @@ function renderPortfolio() {
 }
 
 function renderSummary() {
-  const closed = bookings.filter((booking) => booking.closed);
-  const total = closed.reduce((sum, booking) => sum + booking.price, 0);
+  const closed = state.dashboard.appointments.filter((appointment) => appointment.status === "closed");
+  const total = closed.reduce((sum, appointment) => sum + appointment.service.price, 0);
 
+  state.shiftOpen = state.dashboard.shift.is_open;
   shiftCard.classList.toggle("open", state.shiftOpen);
   shiftButton.textContent = state.shiftOpen ? "Закрыть смену" : "Открыть смену";
   shiftCard.querySelector(".status").lastChild.textContent = state.shiftOpen ? " Смена открыта" : " Смена закрыта";
   shiftTotal.textContent = state.shiftOpen ? `${money(total)} ₽` : "—";
   closedCount.textContent = closed.length;
+  appointmentsCount.textContent = state.dashboard.appointments.length;
   revenue.textContent = `${money(total)} ₽`;
   todayHint.textContent = state.shiftOpen ? "Закрывайте записи после завершения услуги" : "Чтобы закрывать записи, откройте смену";
+}
+
+function renderFinance() {
+  balance.textContent = `${money(state.dashboard.finance.balance)} ₽`;
+  financeList.innerHTML = "";
+
+  if (state.dashboard.finance.operations.length === 0) {
+    financeList.innerHTML = `<div class="empty-state">Финансовых операций пока нет</div>`;
+    return;
+  }
+
+  state.dashboard.finance.operations.forEach((operation) => {
+    const item = document.createElement("article");
+    item.className = "operation";
+    item.innerHTML = `
+      <div>
+        <strong>${operation.title}</strong>
+        <p>${operation.operation_type_display} · ${operation.created_at_display}</p>
+      </div>
+      <b class="${operation.amount > 0 ? "positive" : ""}">${operation.amount > 0 ? "+" : ""}${money(operation.amount)} ₽</b>
+    `;
+    financeList.append(item);
+  });
 }
 
 function renderToday() {
@@ -204,6 +240,13 @@ function renderProfile() {
   renderEducation();
 }
 
+function renderAll() {
+  renderToday();
+  renderProfile();
+  renderPortfolio();
+  renderFinance();
+}
+
 document.querySelectorAll("[data-tab]").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll("[data-tab]").forEach((item) => item.classList.remove("active"));
@@ -213,13 +256,13 @@ document.querySelectorAll("[data-tab]").forEach((button) => {
   });
 });
 
-shiftButton.addEventListener("click", () => {
-  state.shiftOpen = !state.shiftOpen;
+shiftButton.addEventListener("click", async () => {
+  state.dashboard.shift = await apiFetch("/api/shift/toggle/", { method: "POST" });
   renderToday();
 });
 
 editMedicalButton.addEventListener("click", () => {
-  const medicalBook = state.profile.medical_book;
+  const medicalBook = state.dashboard.medical_book;
 
   medicalForm.elements.namedItem("number").value = medicalBook.number;
   medicalForm.elements.namedItem("valid_until").value = medicalBook.valid_until;
@@ -240,12 +283,15 @@ medicalForm.addEventListener("submit", async (event) => {
     status: medicalForm.elements.namedItem("status").value,
   };
 
-  state.profile = await apiFetch("/api/profile/", {
+  const profile = await apiFetch("/api/profile/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
+  state.dashboard.medical_book = profile.medical_book;
+  state.dashboard.education = profile.education;
+  state.dashboard.portfolio = profile.portfolio;
   renderProfile();
   medicalForm.classList.add("hidden");
 });
@@ -268,7 +314,7 @@ educationForm.addEventListener("submit", async (event) => {
     body: new FormData(educationForm),
   });
 
-  state.profile.education.unshift(record);
+  state.dashboard.education.unshift(record);
   renderEducation();
   educationForm.classList.add("hidden");
 });
@@ -291,10 +337,9 @@ portfolioForm.addEventListener("submit", async (event) => {
     body: new FormData(portfolioForm),
   });
 
-  state.profile.portfolio.unshift(work);
+  state.dashboard.portfolio.unshift(work);
   renderPortfolio();
   portfolioForm.classList.add("hidden");
 });
 
-renderToday();
-loadProfile();
+loadDashboard();
